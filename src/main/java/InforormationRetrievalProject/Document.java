@@ -30,6 +30,10 @@ public class Document {
         return text;
     }
     
+    public int getDocID() {
+        return docID;
+    }
+    
     /*
         Returns the headline and document text
     

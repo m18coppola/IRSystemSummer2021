@@ -13,12 +13,15 @@ import java.util.HashMap;
  */
 public class InvertedIndex extends HashMap<String, PostingList>{
     boolean containsStopWords;
+    public static PostingList masterPostingList;
     
     public InvertedIndex(boolean containsStopWords) {
         this.containsStopWords = containsStopWords;
+        masterPostingList = new PostingList();
     }
     
     public void addDoc(Document d) {
+        masterPostingList.insert(d.getDocID());
         TokenizerList tokens;
         if (containsStopWords) {
             tokens = new TokenizerList(d.getText(), true);
@@ -29,12 +32,21 @@ public class InvertedIndex extends HashMap<String, PostingList>{
         for (String token: tokens) {
             if (!this.containsKey(token)) {
                 PostingList pl = new PostingList();
-                pl.insert(d);
+                pl.insert(d.getDocID());
                 this.put(token, pl);
             } else {
                 PostingList pl = this.get(token);
-                pl.insert(d);
+                pl.insert(d.getDocID());
             }
         }
+    }
+    
+    @Override
+    public PostingList get(Object key) {
+        PostingList result = super.get(key);
+        if (result  == null) {
+            result = new PostingList();
+        }
+        return result;
     }
 }

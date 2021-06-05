@@ -16,7 +16,7 @@ import java.util.Scanner;
  */
 public class Main {
 
-    static final boolean SMALL_DATA = true; //change for debugging
+    static final boolean SMALL_DATA = false; //change for debugging
 
     /**
      * @param args the command line arguments
@@ -45,8 +45,13 @@ public class Main {
         System.out.print("Enter a search term or \"q\" to exit: ");
         String in = userInput.nextLine();
         while (!in.equals("q")) {
-            PostingList p = myIndex.get(in);
-            System.out.println((float) p.size() / (float) docs.size() * 100.0f + "% of documents matched (" + p.size() + " docs)");
+            Query q = new Query(in);
+            PostingList p = q.search(myIndex);
+            if (p != null) {
+                System.out.println((float) p.size() / (float) docs.size() * 100.0f + "% of documents matched (" + p.size() + " docs)");
+            } else {
+                System.out.println("No matches");
+            }
             System.out.print("Enter a search term or \"q\" to exit: ");
             in = userInput.nextLine();
         }
