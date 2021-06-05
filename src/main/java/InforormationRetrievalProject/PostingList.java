@@ -5,6 +5,8 @@
  */
 package InforormationRetrievalProject;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author m18coppola
@@ -18,11 +20,12 @@ public class PostingList {
         size = 0;
     }
     
-    public void insert(int docID) {
+    public Post insert(int docID) {
         if (head == null) {
             head = new Post(docID);
             size++;
             head.freq++;
+            return head;
         } else {
             Post finger = head;
             while (!(finger.docID == docID || finger.next == null)) {
@@ -30,13 +33,22 @@ public class PostingList {
             }
             if (finger.docID == docID) {
                 finger.freq++;
+                return finger;
             } else {
                 finger.next = new Post(docID);
                 size++;
                 finger.next.freq++;
+                return finger.next;
             }
+        }     
+    }
+    
+    public void insert(int docID, int pos) {
+        Post p = this.insert(docID);
+        if(p == null) {
+            System.out.println("uh oh");
         }
-        
+        p.positions.add(pos);
     }
 
     public static PostingList intersect(PostingList listA, PostingList listB) {
@@ -118,13 +130,14 @@ public class PostingList {
     public class Post{       
         int docID;
         Post next;
+        ArrayList<Integer> positions = new ArrayList<Integer>();
         int freq;
         
         public Post(int docID) {
             this.docID = docID;
             next = null;
             freq = 0;
-        }        
+        }
     }
     
     public int size() {

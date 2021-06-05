@@ -16,7 +16,7 @@ import java.util.Scanner;
  */
 public class Main {
 
-    static final boolean SMALL_DATA = false; //change for debugging
+    static final boolean SMALL_DATA = true; //change for debugging
 
     /**
      * @param args the command line arguments

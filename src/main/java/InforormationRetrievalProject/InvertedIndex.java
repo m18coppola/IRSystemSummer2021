@@ -29,15 +29,17 @@ public class InvertedIndex extends HashMap<String, PostingList>{
             tokens = new TokenizerList(d.getText(), false);
         }
         
+        int pos = 0;
         for (String token: tokens) {
             if (!this.containsKey(token)) {
                 PostingList pl = new PostingList();
-                pl.insert(d.getDocID());
+                pl.insert(d.getDocID(), pos);
                 this.put(token, pl);
             } else {
                 PostingList pl = this.get(token);
-                pl.insert(d.getDocID());
+                pl.insert(d.getDocID(), pos);
             }
+            pos++;
         }
     }
     
