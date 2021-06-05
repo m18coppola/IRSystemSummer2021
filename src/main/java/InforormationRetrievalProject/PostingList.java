@@ -45,9 +45,6 @@ public class PostingList {
     
     public void insert(int docID, int pos) {
         Post p = this.insert(docID);
-        if(p == null) {
-            System.out.println("uh oh");
-        }
         p.positions.add(pos);
     }
 
