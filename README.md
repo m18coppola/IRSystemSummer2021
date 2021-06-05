@@ -1,4 +1,4 @@
-# # InformationRetrievalProject
+# InformationRetrievalProject
 Information Retrieval CSIS400 Siena College
 
 # Requirements
