@@ -21,7 +21,7 @@ public class InvertedIndex extends HashMap<String, PostingList>{
     }
     
     public void addDoc(Document d) {
-        masterPostingList.insert(d.getDocID());
+        masterPostingList.insert(d.getDocID(), 0);
         TokenizerList tokens;
         if (containsStopWords) {
             tokens = new TokenizerList(d.getText(), true);
