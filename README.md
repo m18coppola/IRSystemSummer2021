@@ -16,9 +16,10 @@ To cache a local copy of the build tools and compile/execute use:
   
 Source code can be found and moved into another build system if required (e.g. BlueJ, Maven, make etc...).
 If you would like another build system configured in the repository, contact mj04copp@siena.edu.
-Source code is found in the directory: `src/main/java/Team1/InvertedIndex/`
+Source code is found in the directory: `src/main/java/InformationRetrievalProject`
 
 # Use
 During execution, the program will load the full dataset and index it entirely. This may take considerable time (30-60s).
-Afterwards, a prompt will show. Typing in a case-insensitive keyword will return the docID's of all documents containing the keyword alongside the frequency as well as a percentage of documents of the dataset that contain that keyword.
+Afterwards, a prompt will show. Queries support AND, OR and NOT operations. keywords will automatically OR together, unless stated otherwise.
+The system will return the number of documents and percentage of corpus that match the query.
 Typing `q` will exit the program.
