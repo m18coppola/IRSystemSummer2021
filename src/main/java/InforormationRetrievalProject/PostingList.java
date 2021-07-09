@@ -5,7 +5,10 @@
  */
 package InforormationRetrievalProject;
 
+import static java.lang.Math.log10;
+import static java.lang.Math.sqrt;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -15,10 +18,13 @@ import java.util.Random;
 public class PostingList {
     private static final int NEG_INF = Integer.MIN_VALUE;
     private static final int POS_INF = Integer.MAX_VALUE;
+
+    
     
     private Post head, tail;
     private int size;
     private int height = 0;
+    public double idf = -1.0;
     
     private Random random = new Random();
     
@@ -30,9 +36,30 @@ public class PostingList {
         size = 0;
     }
     
+    public double getIDF(int n) {
+        return idf;
+    }
+    
+    public void calculate(int n) {
+        idf = log10((double)n/(double)size);
+        Post p = getLLhead();
+        while (p.docID != POS_INF) {
+            p.calcWeightedTF(idf);
+            p = p.next;
+        }
+    }
+    
+    public Post getPostByID(int docID) {
+        Post p = search(docID);
+        if (p.docID == docID) {
+            return p;
+        } else {
+            return null;
+        }
+    }
+    
     public Post search(int docKey) {
         Post p = head;
-        //System.out.println("searching for " + docKey);
         
         while (p.below != null) {
             p = p.below;
@@ -185,6 +212,35 @@ public class PostingList {
         
         return resultList;
     }
+    
+    static PostingList phraseSearch(String[] keys, InvertedIndex index) {
+        PostingList matchList = new PostingList();
+        ArrayList<PostingList> listsByKey = new ArrayList<PostingList>();
+        
+        for (String key: keys) {
+            listsByKey.add(index.get(key));
+        }
+        
+        Post firstWord = listsByKey.get(0).getLLhead();
+        while (firstWord.docID != POS_INF) {
+            boolean found = true;
+            for(int pos : firstWord.positions) {
+                for (int i = 1; i < listsByKey.size(); i++) {
+                    PostingList pl = listsByKey.get(i);
+                    Post p = pl.getPostByID(firstWord.docID);
+                    if (p == null || !p.positions.contains(pos + i)) {
+                        found = false;
+                    }
+                }
+            }
+            if (found) {
+                matchList.insert(firstWord.docID, 0);
+            }
+            firstWord = firstWord.next;
+        }
+        
+        return matchList;
+    }
 
     private void setBeforeAfter(Post p, Post newPost) {
         newPost.next = p.next;
@@ -195,16 +251,39 @@ public class PostingList {
 
     private void setAboveBelow(Post position, int docID, Post newPost, Post priorPost) {
         if (priorPost != null) {
-            while (priorPost.next.docID != docID) {
-                priorPost = priorPost.next;
+            while (true) {
+                if(priorPost.next.docID != docID) {
+                    priorPost = priorPost.next;
+                } else {
+                    break;
+                }
             }
             
             newPost.below = priorPost.next;
             priorPost.next.above = newPost;
         }
         
-        if (position != null && position.next.docID == docID) {
-            newPost.above = position.next;
+        if (position != null) {
+            if (position.next.docID == docID) {
+                newPost.above = position.next;
+            }
+        }
+    }
+
+    void calculateL2norm(InvertedIndex index) {
+        Post p = getLLhead();
+        while (p.docID != POS_INF) {
+            p.calculatel2norm(index);
+            p = p.next;
+        }
+    }
+
+    void calculateNormalWeights(PostingList masterPostingList) {
+        Post p = getLLhead();
+        while (p.docID != POS_INF) {
+            
+            p.normWeight = p.weightedTF/masterPostingList.getPostByID(p.docID).l2norm;
+            p = p.next;
         }
     }
     
@@ -216,11 +295,49 @@ public class PostingList {
         Post above;
         ArrayList<Integer> positions = new ArrayList<Integer>();
         int freq;
+        double weightedTF = -1.0;
+        double l2norm = -1.0;
+        double normWeight = -1.0;
+        double cosineSim = 0.0;
         
         public Post(int docID) {
             this.docID = docID;
             next = null;
             freq = 0;
+        }
+        
+        public double getWeightedTF() {
+            return weightedTF;
+        }
+        
+        public void calcWeightedTF(double idf){
+            if (freq == 0) {
+                weightedTF = 0.0;
+            } else {
+                weightedTF = (1.0 + log10(freq)) * idf;
+            }
+        }
+        
+        public double getl2norm(){
+            return l2norm;
+        }
+        
+        public void calculatel2norm(InvertedIndex index){
+            double sum = 0.0;
+            for(Map.Entry e : index.entrySet()) {
+                PostingList pl = (PostingList)e.getValue();
+                Post p = pl.getPostByID(docID);
+                if (p != null) {
+                    sum += p.getWeightedTF();
+                }
+            }
+            l2norm = sqrt(sum);
+            for(Map.Entry e : index.entrySet()) {
+                PostingList pl = (PostingList)e.getValue();
+                Post p = pl.getPostByID(docID);
+                if (p != null) p.normWeight = p.weightedTF/l2norm;
+            }
+            
         }
     }
     

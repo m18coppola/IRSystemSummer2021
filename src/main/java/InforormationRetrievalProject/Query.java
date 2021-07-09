@@ -5,7 +5,11 @@
  */
 package InforormationRetrievalProject;
 
+import InforormationRetrievalProject.PostingList.Post;
+import static java.lang.Math.log10;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,7 +36,44 @@ public class Query {
         }
     }
     
-    public PostingList search(InvertedIndex index) {
+    public PostingList vectorSpaceSearch(InvertedIndex index, InvertedIndex fullIndex) {
+        
+        PostingList docsWithTerms = search(index, fullIndex);
+        
+        HashMap<String, Integer> termFreqs = new HashMap<String, Integer>();
+        for (String token : tokens) {
+            if (!(token.equals("AND") ||token.equals("OR") ||token.equals("NOT"))){
+                if (!termFreqs.containsKey(token)) {
+                    termFreqs.put(token, 0);
+                }
+                int freq = termFreqs.get(token);
+                termFreqs.put(token, freq+1);
+            }
+        }
+        
+        
+        HashMap<String, Double> weightedTermFreqs = new HashMap<String, Double>();
+        for (Entry e : termFreqs.entrySet()) {
+            weightedTermFreqs.put((String) e.getKey(), 1.0 + log10((int)e.getValue()));
+        }
+        
+        Post possibleDocs = docsWithTerms.getLLhead();
+        while(possibleDocs.docID < Integer.MAX_VALUE) {
+            for (Entry e : weightedTermFreqs.entrySet()) {
+                PostingList pl = index.get(e.getKey());
+                Post p = pl.getPostByID(possibleDocs.docID);
+                
+                if (p != null){
+                    possibleDocs.cosineSim += p.normWeight * weightedTermFreqs.get(e.getKey());
+                }
+            }
+            possibleDocs = possibleDocs.next;
+        }
+        
+        return docsWithTerms;
+    }
+    
+    public PostingList search(InvertedIndex index, InvertedIndex fullIndex) {
         PostingList answer = new PostingList();
         Stack<PostingList> booleanStack = new Stack<PostingList>();
         for(int i = 0; i < tokens.size(); i++) {
@@ -57,6 +98,8 @@ public class Query {
             } else if (tokens.get(i).equals("NOT")){
                 i++;
                 booleanStack.push(PostingList.negate(index.masterPostingList, index.get(tokens.get(i).toLowerCase())));
+            } else if (tokens.get(i).contains(" ")) {
+                booleanStack.push(PostingList.phraseSearch(tokens.get(i).toLowerCase().split(" "), fullIndex));
             }else {
                 booleanStack.push(index.get(tokens.get(i).toLowerCase()));
             }

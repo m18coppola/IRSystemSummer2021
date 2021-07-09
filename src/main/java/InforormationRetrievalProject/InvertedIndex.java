@@ -5,6 +5,7 @@
  */
 package InforormationRetrievalProject;
 
+import InforormationRetrievalProject.PostingList.Post;
 import java.util.HashMap;
 
 /**
@@ -31,15 +32,29 @@ public class InvertedIndex extends HashMap<String, PostingList>{
         
         int pos = 0;
         for (String token: tokens) {
+            PostingList pl;
+            
             if (!this.containsKey(token)) {
-                PostingList pl = new PostingList();
+                pl = new PostingList();
                 pl.insert(d.getDocID(), pos);
                 this.put(token, pl);
             } else {
-                PostingList pl = this.get(token);
+                pl = this.get(token);
                 pl.insert(d.getDocID(), pos);
             }
             pos++;
+        }
+    }
+    
+    public void updateTFs(int n){
+        for(Entry e : this.entrySet()) {
+            PostingList pl = (PostingList)e.getValue();
+            pl.calculate(n);
+        }
+        masterPostingList.calculateL2norm(this);
+        for(Entry e : this.entrySet()) {
+            PostingList pl = (PostingList)e.getValue();
+            pl.calculateNormalWeights(masterPostingList);
         }
     }
     
