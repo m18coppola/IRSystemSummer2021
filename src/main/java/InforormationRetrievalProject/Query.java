@@ -9,6 +9,7 @@ import InforormationRetrievalProject.PostingList.Post;
 import static java.lang.Math.log10;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -57,8 +58,13 @@ public class Query {
             weightedTermFreqs.put((String) e.getKey(), 1.0 + log10((int)e.getValue()));
         }
         
-        Post possibleDocs = docsWithTerms.getLLhead();
-        while(possibleDocs.docID < Integer.MAX_VALUE) {
+        Post possibleDocs = null;
+        Iterator iter = docsWithTerms.treemap.entrySet().iterator();
+        if (iter.hasNext()) {
+            possibleDocs = (iter.hasNext()) ? (Post)((Entry)(iter.next())).getValue() : null;
+        }
+        
+        while(possibleDocs != null) {
             for (Entry e : weightedTermFreqs.entrySet()) {
                 PostingList pl = index.get(e.getKey());
                 Post p = pl.getPostByID(possibleDocs.docID);
@@ -67,7 +73,7 @@ public class Query {
                     possibleDocs.cosineSim += p.normWeight * weightedTermFreqs.get(e.getKey());
                 }
             }
-            possibleDocs = possibleDocs.next;
+            possibleDocs = (iter.hasNext()) ? (Post)((Entry)(iter.next())).getValue() : null;
         }
         
         return docsWithTerms;

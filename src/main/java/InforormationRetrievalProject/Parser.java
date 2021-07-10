@@ -36,7 +36,7 @@ public class Parser {
         String bufferedXMLcontent = Files.readString(file.toPath());
         String[] XMLtokens = bufferedXMLcontent.split("(?=<)|(?<=>)");
         ArrayList<Document> docs = new ArrayList<>();
-        Document currDoc = new Document();
+        Document currDoc = null;
         Stack<Attribute> currState = new Stack<>();
         for (int i = 0; i < XMLtokens.length; i++) {
             if (XMLtokens[i].equals("<DOC>")) {

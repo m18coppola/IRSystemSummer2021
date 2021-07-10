@@ -7,9 +7,15 @@ package InforormationRetrievalProject;
 
 import InforormationRetrievalProject.PostingList.Post;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 
@@ -19,7 +25,9 @@ import java.util.Scanner;
  */
 public class Main {
 
-    static final boolean SMALL_DATA = true; //change for debugging
+    static final boolean SMALL_DATA = false; //change for debugging
+    static final String filepath1 = "/Users/m18coppola/Documents/NetBeansProjects/InforormationRetrievalProject/index.bin";
+    static final String filepath2 = "/Users/m18coppola/Documents/NetBeansProjects/InforormationRetrievalProject/fullindex.bin";
 
     /**
      * @param args the command line arguments
@@ -35,10 +43,12 @@ public class Main {
             }
         } else {
             docs.addAll(Parser.parseTREC(directoryListing[0]));
+            docs.addAll(Parser.parseTREC(directoryListing[1]));
+            docs.addAll(Parser.parseTREC(directoryListing[2]));
         }
-
         System.out.println(docs.size() + " documents loaded.");
-
+        
+        Instant start = Instant.now();
         InvertedIndex myIndex = new InvertedIndex(false);
         for (Document d : docs) {
             myIndex.addDoc(d);
@@ -47,8 +57,12 @@ public class Main {
         
         InvertedIndex fullIndex = new InvertedIndex(true);
         for (Document d : docs) {
-            //fullIndex.addDoc(d);
+            fullIndex.addDoc(d);
         }
+        Instant end = Instant.now();
+        
+        long time = Duration.between(start, end).toSeconds();
+        System.out.println("Indexed in " + time + " seconds.");
 
         Scanner userInput = new Scanner(System.in);
         System.out.print("Enter a search term or \"q\" to exit: ");
@@ -69,15 +83,22 @@ public class Main {
                 }  
             });
             
-            Post docsWithCS = p.getLLhead();
-            while (docsWithCS.docID < Integer.MAX_VALUE) {
+            
+            Post docsWithCS = null;
+            Iterator iter = p.treemap.entrySet().iterator();
+            if (iter.hasNext()) {
+                docsWithCS = (iter.hasNext()) ? (Post)((Map.Entry)(iter.next())).getValue() : null;
+            }
+            
+            
+            while (docsWithCS != null) {
                 pq.add(docsWithCS);
-                docsWithCS = docsWithCS.next;
+                docsWithCS = (iter.hasNext()) ? (Post)((Map.Entry)(iter.next())).getValue() : null;
             }
             
             int i = 1;
             Post post = pq.poll();
-            while (post != null) {
+            while (post != null && i <= 1000) {
                 System.out.println("0 1 " + docs.get(post.docID - 1).docNo + " " + i + " " + post.cosineSim + " MichaelAndLauren");
                 i++;
                 post = pq.poll();

@@ -6,13 +6,14 @@
 package InforormationRetrievalProject;
 
 import InforormationRetrievalProject.PostingList.Post;
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  *
  * @author m18coppola
  */
-public class InvertedIndex extends HashMap<String, PostingList>{
+public class InvertedIndex extends HashMap<String, PostingList> implements Serializable{
     boolean containsStopWords;
     public static PostingList masterPostingList;
     
